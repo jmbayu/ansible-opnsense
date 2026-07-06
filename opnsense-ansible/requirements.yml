@@ -1,0 +1,4 @@
+---
+collections:
+  - name: oxlorg.opnsense
+    # Note: versioning follows OPNsense releases (e.g., 25.x, 26.x)
