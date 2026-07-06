@@ -1,0 +1,43 @@
+---
+- name: Gather OPNsense Configuration Facts
+  hosts: opnsense
+  gather_facts: false
+
+  module_defaults:
+    group/oxlorg.opnsense.all:
+      firewall: "{{ firewall }}"
+      api_key: "{{ api_key }}"
+      api_secret: "{{ api_secret }}"
+      ssl_verify: "{{ ssl_verify }}"
+
+  vars:
+    resource_targets:
+      - alias
+      - rule
+      - interface_vlan
+      - gateway
+      - nat_source
+      - unbound_host
+    output_dir: "input"
+
+  tasks:
+    - name: Ensure input directory exists
+      delegate_to: localhost
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/{{ output_dir }}"
+        state: directory
+
+    - name: Gather facts
+      oxlorg.opnsense.list:
+        target: "{{ item }}"
+      loop: "{{ resource_targets }}"
+      register: gathered_facts
+
+    - name: Save to YAML
+      delegate_to: localhost
+      ansible.builtin.copy:
+        # Save as a dictionary so include_vars can load it
+        content: "{{ {item.item: item[item.item]} | to_nice_yaml }}"
+        dest: "{{ playbook_dir }}/{{ output_dir }}/{{ item.item }}.yml"
+      loop: "{{ gathered_facts.results }}"
+      when: item[item.item] is defined and item[item.item] | length > 0

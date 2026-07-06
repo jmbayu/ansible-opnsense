@@ -1,0 +1,82 @@
+---
+- name: Provision OPNsense Firewall
+  hosts: opnsense
+  gather_facts: false
+
+  module_defaults:
+    group/oxlorg.opnsense.all:
+      firewall: "{{ firewall }}"
+      api_key: "{{ api_key }}"
+      api_secret: "{{ api_secret }}"
+      ssl_verify: "{{ ssl_verify }}"
+
+  tasks:
+    - name: Load gathered configuration
+      delegate_to: localhost
+      ansible.builtin.include_vars:
+        dir: "input"
+        name: config
+
+    - name: Provision Aliases
+      oxlorg.opnsense.alias:
+        name: "{{ item.name }}"
+        type: "{{ item.type }}"
+        content: "{{ item.content }}"
+        description: "{{ item.description | default('') }}"
+        state: present
+      loop: "{{ config.alias | default([]) }}"
+
+    - name: Provision VLANs
+      oxlorg.opnsense.interface_vlan:
+        tag: "{{ item.tag }}"
+        if: "{{ item.if }}"
+        descr: "{{ item.descr | default('') }}"
+        state: present
+      loop: "{{ config.interface_vlan | default([]) }}"
+
+    - name: Provision Gateways
+      oxlorg.opnsense.gateway:
+        name: "{{ item.name }}"
+        interface: "{{ item.interface }}"
+        gateway: "{{ item.gateway }}"
+        ipprotocol: "{{ item.ipprotocol }}"
+        descr: "{{ item.descr | default('') }}"
+        state: present
+      loop: "{{ config.gateway | default([]) }}"
+
+    - name: Provision NAT Source Rules
+      oxlorg.opnsense.nat_source:
+        interface: "{{ item.interface }}"
+        protocol: "{{ item.protocol | default('any') }}"
+        src: "{{ item.src }}"
+        dst: "{{ item.dst }}"
+        description: "{{ item.description | default('') }}"
+        state: present
+      loop: "{{ config.nat_source | default([]) }}"
+
+    - name: Provision Unbound Hosts
+      oxlorg.opnsense.unbound_host:
+        host: "{{ item.host }}"
+        domain: "{{ item.domain }}"
+        server: "{{ item.server }}"
+        description: "{{ item.description | default('') }}"
+        state: present
+      loop: "{{ config.unbound_host | default([]) }}"
+
+    - name: Provision Firewall Rules
+      oxlorg.opnsense.rule:
+        interface: "{{ item.interface }}"
+        direction: "{{ item.direction }}"
+        ipprotocol: "{{ item.ipprotocol }}"
+        protocol: "{{ item.protocol }}"
+        src: "{{ item.src }}"
+        dst: "{{ item.dst }}"
+        dst_port: "{{ item.dst_port | default('') }}"
+        description: "{{ item.description | default('') }}"
+        action: "{{ item.action }}"
+        state: present
+      loop: "{{ config.rule | default([]) }}"
+
+    - name: Apply changes
+      oxlorg.opnsense.reload:
+        target: "filter"
