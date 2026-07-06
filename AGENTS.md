@@ -19,6 +19,7 @@ This project uses Ansible to provision and manage OPNsense firewalls via the off
 - **Module Defaults:** Use `group/oxlorg.opnsense.all` in `module_defaults` to centralize connection parameters (`firewall`, `api_key`, `api_secret`, `ssl_verify`).
 - **Firewall URL:** The `firewall` variable should be the base URL (e.g., `https://192.168.1.1`). Do NOT include the `/api` suffix.
 - **Gathering Logic:** When using `oxlorg.opnsense.list`, results are returned in a dictionary key named after the resource (e.g., `item.alias`).
+- **Expanding Targets:** To add new resources to the gathering process, add the resource name (as used in the corresponding `oxlorg.opnsense.<resource>` module) to the `resource_targets` list in `gather_facts.yml`.
 
 ## Validation
 - Ensure all YAML files are syntactically valid.

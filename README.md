@@ -66,6 +66,6 @@ If you have an existing OPNsense installation and want to start managing it via 
     ansible-playbook -i opnsense-ansible/inventory/hosts.yml opnsense-ansible/playbooks/gather_facts.yml
     ```
 2.  **Review the output:**
-    Check the `opnsense-ansible/input/` directory for YAML files (e.g., `alias.yml`, `rule.yml`).
+    Check the `opnsense-ansible/input/` directory for YAML files (e.g., `alias.yml`, `rule.yml`). You can find a comprehensive list of supported resource targets in `opnsense-ansible/playbooks/gather_facts.yml`.
 3.  **Version Control:**
     You can now commit these files to Git to track your infrastructure changes over time.

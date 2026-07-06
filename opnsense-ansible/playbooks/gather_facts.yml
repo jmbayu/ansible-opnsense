@@ -12,15 +12,50 @@
 
   vars:
     # List of resource types to extract from the firewall
-    # These match the 'target' parameter of the oxlorg.opnsense.list module
+    # These match the 'target' parameter of the oxlorg.opnsense.list module.
+    # Note: This is not an exhaustive list but covers the most common resources.
     resource_targets:
+      # Base & Firewall
       - alias
       - rule
-      - interface_vlan
+      - rule_interface_group
       - gateway
+      - gateway_group
       - nat_source
-      - unbound_host
+      - nat_one_to_one
+
+      # Interfaces & Networking
+      - interface_vlan
+      - interface_vip
+      - interface_lagg
+      - interface_bridge
+      - neighbor
+      - static_route
+
+      # VPN
+      - wireguard_client
+      - wireguard_server
+      - ipsec_connection
+      - openvpn_server
+      - openvpn_client
+
+      # Services
       - dhcp_subnet
+      - dhcp_reservation
+      - unbound_host
+      - unbound_alias
+      - unbound_forward
+      - bind_domain
+      - bind_record
+      - dnsmasq_host
+      - cron
+
+      # Monitoring & System
+      - monit_service
+      - monit_test
+      - syslog
+      - user
+      - group
 
     # Destination directory for the gathered YAML files
     output_dir: "../input"
