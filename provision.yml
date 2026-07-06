@@ -32,7 +32,6 @@
         descr: "{{ item.descr | default('') }}"
         state: present
       loop: "{{ interface_vlan | default([]) }}"
-      loop: "{{ interface_vlan | default([]) }}"
 
     - name: Provision Gateways
       oxlorg.opnsense.gateway:
