@@ -6,6 +6,7 @@ This project uses Ansible to provision and manage OPNsense firewalls via the off
 ## Core Principles
 - **Collection Choice:** Use `oxlorg.opnsense` (formerly `ansibleguy.opnsense`). It is the community standard for OPNsense API management.
 - **Connection Mode:** Always use `ansible_connection: local` as the modules run on the control node and communicate with the OPNsense API.
+- **Gather Facts:** Set `gather_facts: false` in playbooks. Standard Ansible fact gathering (via `setup` module) requires SSH and Python on the target, which is unnecessary for API-driven management and can cause connection errors if SSH is not yet configured.
 - **Security:** Do not commit raw API keys or secrets. Use placeholders or Ansible Vault.
 
 ## Project Structure
