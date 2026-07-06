@@ -11,7 +11,7 @@
       ssl_verify: "{{ ssl_verify }}"
 
   vars:
-    # EXHAUSTIVE list of resource types supported by oxlorg.opnsense.list
+    # DEFINITIVE EXHAUSTIVE list of resource types supported by oxlorg.opnsense.list
     resource_targets:
       # --- Firewall & NAT ---
       - alias
@@ -30,6 +30,7 @@
       - interface_bridge
       - interface_gif
       - interface_gre
+      - interface_loopback
       - interface_vxlan
       - gateway
       - gateway_group
@@ -46,25 +47,30 @@
       - ipsec_auth_remote
       - openvpn_server
       - openvpn_client
+      - openvpn_client_override
 
       # --- Services (Core) ---
       - dhcp_subnet
       - dhcp_reservation
       - dhcp_controlagent
       - dhcp_general
+      - dhcrelay_destination
+      - dhcrelay_relay
       - unbound_host
-      - dhcp_subnet
       - unbound_alias
       - unbound_forward
       - unbound_dot
       - unbound_dnsbl
       - dnsmasq_host
       - dnsmasq_domain
+      - dnsmasq_range
+      - dnsmasq_tag
       - cron
 
       # --- System & Access ---
       - user
       - group
+      - privilege
       - syslog
 
       # --- Monitoring ---
@@ -73,8 +79,10 @@
       - monit_alert
       - ids_rule
       - ids_user_rule
+      - ids_policy
+      - ids_policy_rule
 
-      # --- Plugins (Commonly used) ---
+      # --- Plugins & Dynamic Routing ---
       - haproxy_acl
       - haproxy_action
       - haproxy_cpu
@@ -88,9 +96,32 @@
       - bind_record
       - bind_acl
       - bind_blocklist
+      - frr_general
+      - frr_bfd_general
+      - frr_bfd_neighbor
+      - frr_bgp_general
+      - frr_bgp_neighbor
+      - frr_bgp_as_path
+      - frr_bgp_community_list
+      - frr_bgp_prefix_list
+      - frr_bgp_peer_group
+      - frr_bgp_route_map
+      - frr_ospf_general
+      - frr_ospf_interface
+      - frr_ospf_network
+      - frr_ospf_prefix_list
+      - frr_ospf_route_map
+      - frr_ospf3_general
+      - frr_ospf3_interface
+      - frr_ospf3_network
+      - frr_ospf3_prefix_list
+      - frr_ospf3_route_map
+      - frr_rip
       - acme_account
       - acme_certificate
       - nginx_upstream_server
+      - hasync_general
+      - hasync_service
 
     output_dir: "input"
 
@@ -106,12 +137,11 @@
         target: "{{ item }}"
       loop: "{{ resource_targets }}"
       register: gathered_facts
-      ignore_errors: true # In case some plugins are not installed
+      ignore_errors: true # Some plugins might not be installed
 
     - name: Save gathered facts to YAML
       delegate_to: localhost
       ansible.builtin.copy:
-        # Wrap the list in a dictionary so include_vars can load it correctly
         content: "{{ {item.item: item[item.item]} | to_nice_yaml }}"
         dest: "{{ playbook_dir }}/{{ output_dir }}/{{ item.item }}.yml"
       loop: "{{ gathered_facts.results }}"
