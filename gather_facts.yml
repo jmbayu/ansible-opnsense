@@ -53,6 +53,7 @@
       - dhcp_controlagent
       - dhcp_general
       - unbound_host
+      - dhcp_subnet
       - unbound_alias
       - unbound_forward
       - unbound_dot
@@ -110,6 +111,7 @@
     - name: Save gathered facts to YAML
       delegate_to: localhost
       ansible.builtin.copy:
+        # Wrap the list in a dictionary so include_vars can load it correctly
         content: "{{ {item.item: item[item.item]} | to_nice_yaml }}"
         dest: "{{ playbook_dir }}/{{ output_dir }}/{{ item.item }}.yml"
       loop: "{{ gathered_facts.results }}"
