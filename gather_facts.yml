@@ -18,6 +18,7 @@
       - gateway
       - nat_source
       - unbound_host
+      - dhcp_subnet
     output_dir: "input"
 
   tasks:
@@ -36,7 +37,7 @@
     - name: Save to YAML
       delegate_to: localhost
       ansible.builtin.copy:
-        # Save as a dictionary so include_vars can load it
+        # Wrap the list in a dictionary so include_vars can load it correctly
         content: "{{ {item.item: item[item.item]} | to_nice_yaml }}"
         dest: "{{ playbook_dir }}/{{ output_dir }}/{{ item.item }}.yml"
       loop: "{{ gathered_facts.results }}"

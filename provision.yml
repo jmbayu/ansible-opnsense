@@ -15,7 +15,6 @@
       delegate_to: localhost
       ansible.builtin.include_vars:
         dir: "input"
-        name: config
 
     - name: Provision Aliases
       oxlorg.opnsense.alias:
@@ -24,7 +23,7 @@
         content: "{{ item.content }}"
         description: "{{ item.description | default('') }}"
         state: present
-      loop: "{{ config.alias | default([]) }}"
+      loop: "{{ alias | default([]) }}"
 
     - name: Provision VLANs
       oxlorg.opnsense.interface_vlan:
@@ -32,7 +31,7 @@
         if: "{{ item.if }}"
         descr: "{{ item.descr | default('') }}"
         state: present
-      loop: "{{ config.interface_vlan | default([]) }}"
+      loop: "{{ interface_vlan | default([]) }}"
 
     - name: Provision Gateways
       oxlorg.opnsense.gateway:
@@ -42,7 +41,7 @@
         ipprotocol: "{{ item.ipprotocol }}"
         descr: "{{ item.descr | default('') }}"
         state: present
-      loop: "{{ config.gateway | default([]) }}"
+      loop: "{{ gateway | default([]) }}"
 
     - name: Provision NAT Source Rules
       oxlorg.opnsense.nat_source:
@@ -52,7 +51,17 @@
         dst: "{{ item.dst }}"
         description: "{{ item.description | default('') }}"
         state: present
-      loop: "{{ config.nat_source | default([]) }}"
+      loop: "{{ nat_source | default([]) }}"
+
+    - name: Provision DHCP Subnets
+      oxlorg.opnsense.dhcp_subnet:
+        interface: "{{ item.interface }}"
+        range_from: "{{ item.range_from }}"
+        range_to: "{{ item.range_to }}"
+        gateway: "{{ item.gateway | default(omit) }}"
+        description: "{{ item.description | default('') }}"
+        state: present
+      loop: "{{ dhcp_subnet | default([]) }}"
 
     - name: Provision Unbound Hosts
       oxlorg.opnsense.unbound_host:
@@ -61,7 +70,7 @@
         server: "{{ item.server }}"
         description: "{{ item.description | default('') }}"
         state: present
-      loop: "{{ config.unbound_host | default([]) }}"
+      loop: "{{ unbound_host | default([]) }}"
 
     - name: Provision Firewall Rules
       oxlorg.opnsense.rule:
@@ -75,7 +84,7 @@
         description: "{{ item.description | default('') }}"
         action: "{{ item.action }}"
         state: present
-      loop: "{{ config.rule | default([]) }}"
+      loop: "{{ rule | default([]) }}"
 
     - name: Apply changes
       oxlorg.opnsense.reload:
