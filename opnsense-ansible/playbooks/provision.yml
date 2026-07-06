@@ -1,6 +1,8 @@
 ---
 - name: Provision OPNsense Firewall
   hosts: opnsense
+  # We disable standard fact gathering because OPNsense management is API-driven.
+  # Standard facts require SSH and Python on the target, which are not needed here.
   gather_facts: false
 
   # Setting defaults for all modules in the oxlorg.opnsense collection
