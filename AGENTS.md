@@ -1,9 +1,10 @@
 # Agent Instructions
 
 ## Principles
-- **Keep it Simple:** Use a flat directory structure.
+- **GitOps First:** Aim for 100% server coverage. All configurations should be derived from the `input/` YAML files.
+- **Keep it Simple:** Use a flat directory structure for easy visibility.
 - **API Management:** Use `oxlorg.opnsense` collection with `ansible_connection: local`.
-- **No Fact Gathering:** Use `gather_facts: false` to avoid SSH dependencies.
+- **No Fact Gathering:** Use `gather_facts: false` to avoid SSH/Python dependencies on the firewall.
 
 ## Structure
 - `hosts.yml`: Combined inventory and connection variables.
