@@ -1,5 +1,5 @@
 ---
-- name: Provision OPNsense Firewall (GitOps)
+- name: Provision OPNsense Firewall (Complete GitOps)
   hosts: opnsense
   gather_facts: false
 
@@ -11,26 +11,17 @@
       ssl_verify: "{{ ssl_verify }}"
 
   tasks:
-    - name: Load all gathered configuration from input folder
+    - name: Load all configuration from input folder
       delegate_to: localhost
       ansible.builtin.include_vars:
         dir: "input"
 
-    - name: Provision Aliases
-      oxlorg.opnsense.alias:
-        name: "{{ item.name }}"
-        type: "{{ item.type }}"
-        content: "{{ item.content }}"
-        description: "{{ item.description | default('') }}"
-        state: present
-      loop: "{{ alias | default([]) }}"
-
+    # --- L2/L3 Networking ---
     - name: Provision VLANs
       oxlorg.opnsense.interface_vlan:
         tag: "{{ item.tag }}"
         if: "{{ item.if }}"
         descr: "{{ item.descr | default('') }}"
-        state: present
       loop: "{{ interface_vlan | default([]) }}"
 
     - name: Provision Gateways
@@ -39,18 +30,15 @@
         interface: "{{ item.interface }}"
         gateway: "{{ item.gateway }}"
         ipprotocol: "{{ item.ipprotocol }}"
-        descr: "{{ item.descr | default('') }}"
-        state: present
       loop: "{{ gateway | default([]) }}"
 
-    # --- Firewall Layer ---
+    # --- Firewall & NAT ---
     - name: Provision Aliases
       oxlorg.opnsense.alias:
         name: "{{ item.name }}"
         type: "{{ item.type }}"
         content: "{{ item.content }}"
         description: "{{ item.description | default('') }}"
-        state: present
       loop: "{{ alias | default([]) }}"
 
     - name: Provision NAT Source Rules
@@ -59,28 +47,7 @@
         protocol: "{{ item.protocol | default('any') }}"
         src: "{{ item.src }}"
         dst: "{{ item.dst }}"
-        description: "{{ item.description | default('') }}"
-        state: present
       loop: "{{ nat_source | default([]) }}"
-
-    - name: Provision DHCP Subnets
-      oxlorg.opnsense.dhcp_subnet:
-        interface: "{{ item.interface }}"
-        range_from: "{{ item.range_from }}"
-        range_to: "{{ item.range_to }}"
-        gateway: "{{ item.gateway | default(omit) }}"
-        description: "{{ item.description | default('') }}"
-        state: present
-      loop: "{{ dhcp_subnet | default([]) }}"
-
-    - name: Provision Unbound Hosts
-      oxlorg.opnsense.unbound_host:
-        host: "{{ item.host }}"
-        domain: "{{ item.domain }}"
-        server: "{{ item.server }}"
-        description: "{{ item.description | default('') }}"
-        state: present
-      loop: "{{ unbound_host | default([]) }}"
 
     - name: Provision Firewall Rules
       oxlorg.opnsense.rule:
@@ -93,18 +60,15 @@
         dst_port: "{{ item.dst_port | default('') }}"
         description: "{{ item.description | default('') }}"
         action: "{{ item.action }}"
-        state: present
       loop: "{{ rule | default([]) }}"
 
-    # --- Services Layer ---
+    # --- Core Services ---
     - name: Provision DHCP Subnets
       oxlorg.opnsense.dhcp_subnet:
         interface: "{{ item.interface }}"
         range_from: "{{ item.range_from }}"
         range_to: "{{ item.range_to }}"
         gateway: "{{ item.gateway | default(omit) }}"
-        description: "{{ item.description | default('') }}"
-        state: present
       loop: "{{ dhcp_subnet | default([]) }}"
 
     - name: Provision Unbound Hosts
@@ -112,35 +76,32 @@
         host: "{{ item.host }}"
         domain: "{{ item.domain }}"
         server: "{{ item.server }}"
-        description: "{{ item.description | default('') }}"
-        state: present
       loop: "{{ unbound_host | default([]) }}"
 
-    - name: Provision Cron Jobs
-      oxlorg.opnsense.cron:
-        description: "{{ item.description }}"
-        command: "{{ item.command }}"
-        parameters: "{{ item.parameters | default('') }}"
-        minute: "{{ item.minute | default('*') }}"
-        hour: "{{ item.hour | default('*') }}"
-        day: "{{ item.day | default('*') }}"
-        month: "{{ item.month | default('*') }}"
-        weekday: "{{ item.weekday | default('*') }}"
-        enabled: "{{ item.enabled | default(true) }}"
-        state: present
-      loop: "{{ cron | default([]) }}"
-
-    # --- VPN Layer ---
+    # --- VPN & Dynamic Routing ---
     - name: Provision WireGuard Servers
       oxlorg.opnsense.wireguard_server:
         name: "{{ item.name }}"
         pubkey: "{{ item.pubkey }}"
         port: "{{ item.port | default(51820) }}"
-        enabled: "{{ item.enabled | default(true) }}"
-        state: present
       loop: "{{ wireguard_server | default([]) }}"
 
-    - name: Apply all changes (Reload)
+    - name: Provision FRR BGP Neighbors
+      oxlorg.opnsense.frr_bgp_neighbor:
+        address: "{{ item.address }}"
+        remote_as: "{{ item.remote_as }}"
+        enabled: "{{ item.enabled | default(true) }}"
+      loop: "{{ frr_bgp_neighbor | default([]) }}"
+
+    # --- System & Monitoring ---
+    - name: Provision Users
+      oxlorg.opnsense.user:
+        name: "{{ item.name }}"
+        password: "{{ item.password | default(omit) }}"
+        privileges: "{{ item.privileges | default([]) }}"
+      loop: "{{ user | default([]) }}"
+
+    - name: Apply changes (Reload)
       oxlorg.opnsense.reload:
         target: "{{ item }}"
       loop:
@@ -148,4 +109,5 @@
         - dhcp
         - unbound
         - wireguard
+        - frr
       ignore_errors: true
