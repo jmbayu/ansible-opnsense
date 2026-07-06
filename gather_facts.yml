@@ -11,14 +11,86 @@
       ssl_verify: "{{ ssl_verify }}"
 
   vars:
+    # EXHAUSTIVE list of resource types supported by oxlorg.opnsense.list
     resource_targets:
+      # --- Firewall & NAT ---
       - alias
       - rule
-      - interface_vlan
-      - gateway
+      - rule_interface_group
       - nat_source
-      - unbound_host
+      - nat_one_to_one
+      - traffic_shaper_pipe
+      - traffic_shaper_queue
+      - traffic_shaper_rule
+
+      # --- Networking & Interfaces ---
+      - interface_vlan
+      - interface_vip
+      - interface_lagg
+      - interface_bridge
+      - interface_gif
+      - interface_gre
+      - interface_vxlan
+      - gateway
+      - gateway_group
+      - static_route
+      - neighbor
+
+      # --- VPN ---
+      - wireguard_client
+      - wireguard_server
+      - ipsec_connection
+      - ipsec_child
+      - ipsec_psk
+      - ipsec_auth_local
+      - ipsec_auth_remote
+      - openvpn_server
+      - openvpn_client
+
+      # --- Services (Core) ---
       - dhcp_subnet
+      - dhcp_reservation
+      - dhcp_controlagent
+      - dhcp_general
+      - unbound_host
+      - unbound_alias
+      - unbound_forward
+      - unbound_dot
+      - unbound_dnsbl
+      - dnsmasq_host
+      - dnsmasq_domain
+      - cron
+
+      # --- System & Access ---
+      - user
+      - group
+      - syslog
+
+      # --- Monitoring ---
+      - monit_service
+      - monit_test
+      - monit_alert
+      - ids_rule
+      - ids_user_rule
+
+      # --- Plugins (Commonly used) ---
+      - haproxy_acl
+      - haproxy_action
+      - haproxy_cpu
+      - haproxy_errorfile
+      - haproxy_fcgi
+      - haproxy_group
+      - haproxy_lua
+      - haproxy_maintenance
+      - haproxy_user
+      - bind_domain
+      - bind_record
+      - bind_acl
+      - bind_blocklist
+      - acme_account
+      - acme_certificate
+      - nginx_upstream_server
+
     output_dir: "input"
 
   tasks:
@@ -28,17 +100,20 @@
         path: "{{ playbook_dir }}/{{ output_dir }}"
         state: directory
 
-    - name: Gather facts
+    - name: Gather facts for all OPNsense resources
       oxlorg.opnsense.list:
         target: "{{ item }}"
       loop: "{{ resource_targets }}"
       register: gathered_facts
+      ignore_errors: true # In case some plugins are not installed
 
-    - name: Save to YAML
+    - name: Save gathered facts to YAML
       delegate_to: localhost
       ansible.builtin.copy:
-        # Wrap the list in a dictionary so include_vars can load it correctly
         content: "{{ {item.item: item[item.item]} | to_nice_yaml }}"
         dest: "{{ playbook_dir }}/{{ output_dir }}/{{ item.item }}.yml"
       loop: "{{ gathered_facts.results }}"
-      when: item[item.item] is defined and item[item.item] | length > 0
+      when:
+        - item[item.item] is defined
+        - item[item.item] | length > 0
+        - item.failed is not defined or not item.failed

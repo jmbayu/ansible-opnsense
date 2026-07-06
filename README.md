@@ -1,6 +1,6 @@
-# OPNsense Ansible Provisioning
+# OPNsense GitOps with Ansible
 
-Simple way to manage OPNsense via Ansible API.
+A comprehensive framework for complete OPNsense server provisioning via the REST API. This setup allows you to manage your entire firewall configuration as code.
 
 ## Setup
 
@@ -23,4 +23,4 @@ Simple way to manage OPNsense via Ansible API.
   ansible-playbook -i hosts.yml provision.yml
   ```
 
-Files are saved in the `input/` folder as YAML.
+Files are saved in the `input/` folder as YAML. The `gather_facts.yml` playbook is pre-configured with 60+ resource targets to ensure full server coverage.
