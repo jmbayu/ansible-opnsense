@@ -1,6 +1,8 @@
 ---
 - name: Provision OPNsense Firewall
   hosts: opnsense
+  # We disable standard fact gathering because OPNsense management is API-driven.
+  # Standard facts require SSH and Python on the target, which are not needed here.
   gather_facts: false
 
   # Setting defaults for all modules in the oxlorg.opnsense collection
@@ -12,56 +14,28 @@
       ssl_verify: "{{ ssl_verify }}"
 
   tasks:
-    - name: Load gathered configuration
-      delegate_to: localhost
-      ansible.builtin.include_vars:
-        dir: "../input"
-        name: gathered_config
-
-    - name: Provision Aliases from gathered data
+    - name: Create an Alias for Internal Servers
       oxlorg.opnsense.alias:
-        name: "{{ item.name }}"
-        type: "{{ item.type }}"
-        content: "{{ item.content }}"
-        description: "{{ item.description | default('') }}"
+        name: "internal_servers"
+        type: "host"
+        content:
+          - "10.0.0.10"
+          - "10.0.0.11"
+        description: "List of internal application servers"
         state: present
-      loop: "{{ gathered_config.alias | default([]) }}"
 
-    - name: Provision Firewall Rules from gathered data
+    - name: Create a Firewall Rule to allow HTTPS to Internal Servers
       oxlorg.opnsense.rule:
-        interface: "{{ item.interface }}"
-        direction: "{{ item.direction }}"
-        ipprotocol: "{{ item.ipprotocol }}"
-        protocol: "{{ item.protocol }}"
-        src: "{{ item.src }}"
-        dst: "{{ item.dst }}"
-        dst_port: "{{ item.dst_port | default('') }}"
-        description: "{{ item.description | default('') }}"
-        action: "{{ item.action }}"
+        interface: "lan"
+        direction: "in"
+        ipprotocol: "inet"
+        protocol: "TCP"
+        src: "any"
+        dst: "internal_servers"
+        dst_port: "443"
+        description: "Allow HTTPS to internal servers"
+        action: "pass"
         state: present
-      loop: "{{ gathered_config.rule | default([]) }}"
-
-    - name: Provision NAT Source Rules from gathered data
-      oxlorg.opnsense.nat_source:
-        interface: "{{ item.interface }}"
-        protocol: "{{ item.protocol | default('any') }}"
-        src: "{{ item.src }}"
-        dst: "{{ item.dst }}"
-        description: "{{ item.description | default('') }}"
-        state: present
-      loop: "{{ gathered_config.nat_source | default([]) }}"
-
-    - name: Provision Unbound Hosts from gathered data
-      oxlorg.opnsense.unbound_host:
-        host: "{{ item.host }}"
-        domain: "{{ item.domain }}"
-        rr: "{{ item.rr | default('A') }}"
-        mxprio: "{{ item.mxprio | default(omit) }}"
-        mx: "{{ item.mx | default(omit) }}"
-        server: "{{ item.server }}"
-        description: "{{ item.description | default('') }}"
-        state: present
-      loop: "{{ gathered_config.unbound_host | default([]) }}"
 
     - name: Apply changes (Reload)
       oxlorg.opnsense.reload:

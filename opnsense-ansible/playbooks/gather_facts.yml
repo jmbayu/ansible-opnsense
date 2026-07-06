@@ -1,6 +1,8 @@
 ---
 - name: Gather OPNsense Configuration Facts
   hosts: opnsense
+  # We disable standard fact gathering because OPNsense management is API-driven.
+  # Standard facts require SSH and Python on the target, which are not needed here.
   gather_facts: false
 
   module_defaults:
@@ -77,7 +79,9 @@
     - name: Save gathered facts to YAML files
       delegate_to: localhost
       ansible.builtin.copy:
-        content: "{{ {item.item: item[item.item]} | to_nice_yaml }}"
+        # Note: Saving the list directly. include_vars will load it
+        # with the filename as the top-level key.
+        content: "{{ item[item.item] | to_nice_yaml }}"
         dest: "{{ playbook_dir }}/{{ output_dir }}/{{ item.item }}.yml"
         mode: '0644'
       loop: "{{ gathered_facts.results }}"

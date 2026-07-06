@@ -6,6 +6,7 @@ This project uses Ansible to provision and manage OPNsense firewalls via the off
 ## Core Principles
 - **Collection Choice:** Use `oxlorg.opnsense` (formerly `ansibleguy.opnsense`). It is the community standard for OPNsense API management.
 - **Connection Mode:** Always use `ansible_connection: local` as the modules run on the control node and communicate with the OPNsense API.
+- **Gather Facts:** Set `gather_facts: false` in playbooks. Standard Ansible fact gathering (via `setup` module) requires SSH and Python on the target, which is unnecessary for API-driven management and can cause connection errors if SSH is not yet configured.
 - **Security:** Do not commit raw API keys or secrets. Use placeholders or Ansible Vault.
 
 ## Project Structure
@@ -19,7 +20,6 @@ This project uses Ansible to provision and manage OPNsense firewalls via the off
 - **Module Defaults:** Use `group/oxlorg.opnsense.all` in `module_defaults` to centralize connection parameters (`firewall`, `api_key`, `api_secret`, `ssl_verify`).
 - **Firewall URL:** The `firewall` variable should be the base URL (e.g., `https://192.168.1.1`). Do NOT include the `/api` suffix.
 - **Gathering Logic:** When using `oxlorg.opnsense.list`, results are returned in a dictionary key named after the resource (e.g., `item.alias`).
-- **Expanding Targets:** To add new resources to the gathering process, add the resource name (as used in the corresponding `oxlorg.opnsense.<resource>` module) to the `resource_targets` list in `gather_facts.yml`.
 
 ## Validation
 - Ensure all YAML files are syntactically valid.
