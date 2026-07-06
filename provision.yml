@@ -47,7 +47,28 @@
         protocol: "{{ item.protocol | default('any') }}"
         src: "{{ item.src }}"
         dst: "{{ item.dst }}"
+        description: "{{ item.description | default('') }}"
+        state: present
       loop: "{{ nat_source | default([]) }}"
+
+    - name: Provision DHCP Subnets
+      oxlorg.opnsense.dhcp_subnet:
+        interface: "{{ item.interface }}"
+        range_from: "{{ item.range_from }}"
+        range_to: "{{ item.range_to }}"
+        gateway: "{{ item.gateway | default(omit) }}"
+        description: "{{ item.description | default('') }}"
+        state: present
+      loop: "{{ dhcp_subnet | default([]) }}"
+
+    - name: Provision Unbound Hosts
+      oxlorg.opnsense.unbound_host:
+        host: "{{ item.host }}"
+        domain: "{{ item.domain }}"
+        server: "{{ item.server }}"
+        description: "{{ item.description | default('') }}"
+        state: present
+      loop: "{{ unbound_host | default([]) }}"
 
     - name: Provision Firewall Rules
       oxlorg.opnsense.rule:
@@ -60,6 +81,7 @@
         dst_port: "{{ item.dst_port | default('') }}"
         description: "{{ item.description | default('') }}"
         action: "{{ item.action }}"
+        state: present
       loop: "{{ rule | default([]) }}"
 
     # --- Core Services ---
