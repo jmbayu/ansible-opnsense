@@ -47,7 +47,6 @@
       - ipsec_auth_remote
       - openvpn_server
       - openvpn_client
-      - openvpn_client_override
 
       # --- Services (Core) ---
       - dhcp_subnet

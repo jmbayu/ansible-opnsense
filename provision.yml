@@ -51,6 +51,21 @@
         state: present
       loop: "{{ nat_source | default([]) }}"
 
+    - name: Provision Firewall Rules
+      oxlorg.opnsense.rule:
+        interface: "{{ item.interface }}"
+        direction: "{{ item.direction }}"
+        ipprotocol: "{{ item.ipprotocol }}"
+        protocol: "{{ item.protocol }}"
+        src: "{{ item.src }}"
+        dst: "{{ item.dst }}"
+        dst_port: "{{ item.dst_port | default('') }}"
+        description: "{{ item.description | default('') }}"
+        action: "{{ item.action }}"
+        state: present
+      loop: "{{ rule | default([]) }}"
+
+    # --- Services Layer ---
     - name: Provision DHCP Subnets
       oxlorg.opnsense.dhcp_subnet:
         interface: "{{ item.interface }}"
@@ -70,19 +85,19 @@
         state: present
       loop: "{{ unbound_host | default([]) }}"
 
-    - name: Provision Firewall Rules
-      oxlorg.opnsense.rule:
-        interface: "{{ item.interface }}"
-        direction: "{{ item.direction }}"
-        ipprotocol: "{{ item.ipprotocol }}"
-        protocol: "{{ item.protocol }}"
-        src: "{{ item.src }}"
-        dst: "{{ item.dst }}"
-        dst_port: "{{ item.dst_port | default('') }}"
-        description: "{{ item.description | default('') }}"
-        action: "{{ item.action }}"
+    - name: Provision Cron Jobs
+      oxlorg.opnsense.cron:
+        description: "{{ item.description }}"
+        command: "{{ item.command }}"
+        parameters: "{{ item.parameters | default('') }}"
+        minute: "{{ item.minute | default('*') }}"
+        hour: "{{ item.hour | default('*') }}"
+        day: "{{ item.day | default('*') }}"
+        month: "{{ item.month | default('*') }}"
+        weekday: "{{ item.weekday | default('*') }}"
+        enabled: "{{ item.enabled | default(true) }}"
         state: present
-      loop: "{{ rule | default([]) }}"
+      loop: "{{ cron | default([]) }}"
 
     # --- Core Services ---
     - name: Provision DHCP Subnets
