@@ -12,28 +12,34 @@
       ssl_verify: "{{ ssl_verify }}"
 
   tasks:
-    - name: Create an Alias for Internal Servers
-      oxlorg.opnsense.alias:
-        name: "internal_servers"
-        type: "host"
-        content:
-          - "10.0.0.10"
-          - "10.0.0.11"
-        description: "List of internal application servers"
-        state: present
+    - name: Load gathered configuration
+      delegate_to: localhost
+      ansible.builtin.include_vars:
+        dir: "../input"
+        name: gathered_config
 
-    - name: Create a Firewall Rule to allow HTTPS to Internal Servers
-      oxlorg.opnsense.rule:
-        interface: "lan"
-        direction: "in"
-        ipprotocol: "inet"
-        protocol: "TCP"
-        src: "any"
-        dst: "internal_servers"
-        dst_port: "443"
-        description: "Allow HTTPS to internal servers"
-        action: "pass"
+    - name: Provision Aliases from gathered data
+      oxlorg.opnsense.alias:
+        name: "{{ item.name }}"
+        type: "{{ item.type }}"
+        content: "{{ item.content }}"
+        description: "{{ item.description | default('') }}"
         state: present
+      loop: "{{ gathered_config.alias | default([]) }}"
+
+    - name: Provision Firewall Rules from gathered data
+      oxlorg.opnsense.rule:
+        interface: "{{ item.interface }}"
+        direction: "{{ item.direction }}"
+        ipprotocol: "{{ item.ipprotocol }}"
+        protocol: "{{ item.protocol }}"
+        src: "{{ item.src }}"
+        dst: "{{ item.dst }}"
+        dst_port: "{{ item.dst_port | default('') }}"
+        description: "{{ item.description | default('') }}"
+        action: "{{ item.action }}"
+        state: present
+      loop: "{{ gathered_config.rule | default([]) }}"
 
     - name: Apply changes (Reload)
       oxlorg.opnsense.reload:

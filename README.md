@@ -41,6 +41,8 @@ This repository provides a sample structure in the `opnsense-ansible/` directory
 - `inventory/hosts.yml`: Defines your firewall hosts.
 - `inventory/group_vars/opnsense.yml`: Contains connection variables.
 - `playbooks/provision.yml`: A sample playbook for creating aliases and firewall rules.
+- `playbooks/gather_facts.yml`: A playbook to extract existing configuration from a firewall.
+- `input/`: Directory where gathered configuration files are saved.
 
 ## Usage
 
@@ -54,3 +56,16 @@ This repository provides a sample structure in the `opnsense-ansible/` directory
     ```bash
     ansible-playbook -i opnsense-ansible/inventory/hosts.yml opnsense-ansible/playbooks/provision.yml
     ```
+
+## Fact Gathering (Reverse Engineering IaC)
+
+If you have an existing OPNsense installation and want to start managing it via Ansible, you can use the `gather_facts.yml` playbook to extract your current configuration into YAML files.
+
+1.  **Run the gather facts playbook:**
+    ```bash
+    ansible-playbook -i opnsense-ansible/inventory/hosts.yml opnsense-ansible/playbooks/gather_facts.yml
+    ```
+2.  **Review the output:**
+    Check the `opnsense-ansible/input/` directory for YAML files (e.g., `alias.yml`, `rule.yml`).
+3.  **Version Control:**
+    You can now commit these files to Git to track your infrastructure changes over time.
